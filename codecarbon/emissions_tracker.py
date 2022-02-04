@@ -17,9 +17,9 @@ from codecarbon.core import cpu, gpu
 from codecarbon.core.config import get_hierarchical_config, parse_gpu_ids
 from codecarbon.core.emissions import Emissions
 from codecarbon.core.units import Energy, Power, Time
-from codecarbon.core.util import count_cpus, suppress
+from codecarbon.core.util import count_cpus, suppress, is_jetson
 from codecarbon.external.geography import CloudMetadata, GeoMetadata
-from codecarbon.external.hardware import CPU, GPU, RAM
+from codecarbon.external.hardware import CPU, GPU, RAM, JRAM
 from codecarbon.external.logger import logger, set_logger_format, set_logger_level
 from codecarbon.external.scheduler import PeriodicScheduler
 from codecarbon.input import DataSource
@@ -236,11 +236,15 @@ class BaseEmissionsTracker(ABC):
             self._gpu_ids: List[int] = parse_gpu_ids(self._gpu_ids)
             self._conf["gpu_ids"] = self._gpu_ids
             self._conf["gpu_count"] = len(self._gpu_ids)
-
-        logger.info("[setup] RAM Tracking...")
-        ram = RAM(tracking_mode=self._tracking_mode)
-        self._conf["ram_total_size"] = ram.machine_memory_GB
-        self._hardware: List[Union[RAM, CPU, GPU]] = [ram]
+        if is_jetson():
+            logger.info("[setup] JRAM Tracking...")
+            ram = JRAM()
+            self._conf["ram_total_size"] = 2
+        else:
+            logger.info("[setup] RAM Tracking...")
+            ram = RAM(tracking_mode=self._tracking_mode)
+            self._conf["ram_total_size"] = ram.machine_memory_GB
+        self._hardware: List[Union[JRAM, RAM, CPU, GPU]] = [ram]
 
         # Hardware detection
         logger.info("[setup] GPU Tracking...")
@@ -538,6 +542,10 @@ class BaseEmissionsTracker(ABC):
                 self._gpu_power = power
             elif isinstance(hardware, RAM):
                 self._total_ram_energy += energy
+                self._ram_power = power
+            elif isinstance(hardware, JRAM):
+                self._total_ram_energy += energy
+                print("RAM: {}".format(self._total_ram_energy))
                 self._ram_power = power
             else:
                 logger.error(f"Unknown hardware type: {hardware} ({type(hardware)})")

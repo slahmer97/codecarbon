@@ -210,3 +210,5 @@ def is_gpu_details_available():
 
     except pynvml.NVMLError:
         return False
+
+

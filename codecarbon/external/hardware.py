@@ -24,6 +24,8 @@ POWER_CONSTANT = 85
 CONSUMPTION_PERCENTAGE_CONSTANT = 0.5
 
 
+
+
 @dataclass
 class BaseHardware(ABC):
     @abstractmethod
@@ -86,7 +88,8 @@ class GPU(BaseHardware):
 
     @classmethod
     def from_utils(cls, gpu_ids: Optional[List] = None) -> "GPU":
-        return cls(num_gpus=len(get_gpu_details()), gpu_ids=gpu_ids)
+        gpu_details = get_gpu_details()
+        return cls(num_gpus=len(gpu_details), gpu_ids=gpu_ids)
 
 
 @dataclass
@@ -318,6 +321,20 @@ class RAM(BaseHardware):
                 else self.process_memory_GB
             )
             ram_power = Power.from_watts(memory_GB * self.power_per_GB)
+        except Exception as e:
+            logger.warning(f"Could not measure RAM Power ({str(e)})")
+            ram_power = Power.from_watts(0)
+
+        return ram_power
+
+
+@dataclass
+class JRAM(BaseHardware):
+    file = "/sys/bus/i2c/drivers/ina3221x/0-0041/iio_device/in_power2_input"
+    def total_power(self) -> Power:
+        try:
+
+            ram_power = Power.from_watts(1)
         except Exception as e:
             logger.warning(f"Could not measure RAM Power ({str(e)})")
             ram_power = Power.from_watts(0)

@@ -12,6 +12,10 @@ import psutil
 from codecarbon.external.logger import logger
 
 
+def is_jetson():
+    return os.path.isdir('/sys/bus/i2c/drivers/ina3221x/0-0041/iio_device/')
+
+
 @contextmanager
 def suppress(*exceptions):
     try:
@@ -26,7 +30,6 @@ def suppress(*exceptions):
 
 
 def resolve_path(path: Union[str, Path]) -> Path:
-
     """
     Fully resolve a path:
     resolve env vars ($HOME etc.) -> expand user (~) -> make absolute
