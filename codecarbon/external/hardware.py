@@ -24,8 +24,6 @@ POWER_CONSTANT = 85
 CONSUMPTION_PERCENTAGE_CONSTANT = 0.5
 
 
-
-
 @dataclass
 class BaseHardware(ABC):
     @abstractmethod
@@ -196,7 +194,6 @@ class CPU(BaseHardware):
 
 @dataclass
 class RAM(BaseHardware):
-
     # 3 watts of power for every 8GB of DDR3 or DDR4 memory
     # https://www.crucial.com/support/articles-faq-memory/how-much-power-does-memory-use
     power_per_GB = 3 / 8  # W/GB
@@ -331,10 +328,11 @@ class RAM(BaseHardware):
 @dataclass
 class JRAM(BaseHardware):
     file = "/sys/bus/i2c/drivers/ina3221x/0-0041/iio_device/in_power2_input"
+
     def total_power(self) -> Power:
         try:
-
-            ram_power = Power.from_watts(1)
+            with open(self.file, 'r') as f:
+                return Power.from_watts(float(f.read()))
         except Exception as e:
             logger.warning(f"Could not measure RAM Power ({str(e)})")
             ram_power = Power.from_watts(0)
