@@ -131,6 +131,13 @@ class BaseEmissionsTracker(ABC):
         # return final value (why not?)
         return value
 
+    def get_data(self):
+        ram_energy = self._total_ram_energy.kWh * 3600000
+        cpu_energy = self._total_cpu_energy.kWh * 3600000
+        gpu_energy = self._total_gpu_energy.kWh * 3600000
+        wifi_energy = 0
+        board_energy = 0
+        return ram_energy, cpu_energy, gpu_energy
     def __init__(
         self,
         project_name: Optional[str] = _sentinel,
