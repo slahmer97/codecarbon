@@ -554,19 +554,18 @@ class BaseEmissionsTracker(ABC):
                 + " : "
                 + f"{self._total_energy.kWh:.6f} kWh"
             )
+
             if not is_jetson():
                 self._total_energy += energy
-            else:
-                if isinstance(hardware, TX2):
-                    self._total_energy += energy
 
             if isinstance(hardware, CPU):
                 self._total_cpu_energy += energy
                 self._cpu_power = power
+            elif isinstance(hardware, TX2):
+                self._total_energy += energy
             elif isinstance(hardware, JCPU):
                 self._total_cpu_energy += energy
                 self._cpu_power = power
-
             elif isinstance(hardware, GPU):
                 self._total_gpu_energy += energy
                 self._gpu_power = power
