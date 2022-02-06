@@ -332,10 +332,10 @@ class JRAM(BaseHardware):
     def total_power(self) -> Power:
         try:
             with open(self.file, 'r') as f:
-                return Power.from_watts(float(f.read()))
+                return Power.from_milli_watts(float(f.read()))
         except Exception as e:
             logger.warning(f"Could not measure RAM Power ({str(e)})")
-            ram_power = Power.from_watts(0)
+            ram_power = Power.from_milli_watts(0)
 
         return ram_power
 
@@ -346,10 +346,10 @@ class TX2(BaseHardware):
     def total_power(self) -> Power:
         try:
             with open(self.file, 'r') as f:
-                return Power.from_watts(float(f.read()))
+                return Power.from_milli_watts(float(f.read()))
         except Exception as e:
             logger.warning(f"Could not measure Board Power ({str(e)})")
-            board_power = Power.from_watts(0)
+            board_power = Power.from_milli_watts(0)
 
         return board_power
 
@@ -360,9 +360,9 @@ class JCPU(BaseHardware):
     def total_power(self) -> Power:
         try:
             with open(self.file, 'r') as f:
-                return Power.from_watts(float(f.read()))
+                return Power.from_milli_watts(float(f.read()))
         except Exception as e:
             logger.warning(f"Could not measure Board Power ({str(e)})")
-            board_power = Power.from_watts(0)
+            board_power = Power.from_milli_watts(0)
 
         return board_power
