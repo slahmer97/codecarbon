@@ -82,9 +82,12 @@ class AlexNet(nn.Module):
 model = AlexNet()
 torch.no_grad()
 
-for depth in range(0, 11):
+for depth in range(0, 50):
     print("==========DEPTH {} ==========".format(depth))
-    tracker = OfflineEmissionsTracker(country_iso_code="ITA")
+    tracker = OfflineEmissionsTracker(country_iso_code="ITA",
+                                      measure_power_secs=0.001,
+                                      experiment_id=depth,
+                                      log_level="critical")
     random_data = torch.rand((1, 3, 255, 255))
 
     tracker.start()
