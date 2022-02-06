@@ -338,3 +338,31 @@ class JRAM(BaseHardware):
             ram_power = Power.from_watts(0)
 
         return ram_power
+
+@dataclass
+class TX2(BaseHardware):
+    file = "/sys/bus/i2c/drivers/ina3221x/0-0041/iio_device/in_power0_input"
+
+    def total_power(self) -> Power:
+        try:
+            with open(self.file, 'r') as f:
+                return Power.from_watts(float(f.read()))
+        except Exception as e:
+            logger.warning(f"Could not measure Board Power ({str(e)})")
+            board_power = Power.from_watts(0)
+
+        return board_power
+
+@dataclass
+class JCPU(BaseHardware):
+    file = "/sys/bus/i2c/drivers/ina3221x/0-0041/iio_device/in_power1_input"
+
+    def total_power(self) -> Power:
+        try:
+            with open(self.file, 'r') as f:
+                return Power.from_watts(float(f.read()))
+        except Exception as e:
+            logger.warning(f"Could not measure Board Power ({str(e)})")
+            board_power = Power.from_watts(0)
+
+        return board_power

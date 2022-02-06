@@ -3,32 +3,85 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch._C import _log_api_usage_once
+from typing import Any
+
 from codecarbon import EmissionsTracker
 
 
-class Net(nn.Module):
-    def __init__(self, input_size=128, length=1, width=100, act=0):
-        super(Net, self).__init__()
-        self.activation_function = act
-        self.hidden = []
-        self.hidden_count = length
-        self.width = width
-        self.input = nn.Linear(input_size, self.width)
-        for i in range(self.hidden_count):
-            self.hidden.append(nn.Linear(self.width, self.width))
-        self.output = nn.Linear(self.width, 1)
+class AlexNet(nn.Module):
+    def __init__(self, num_classes: int = 1000, dropout: float = 0.5) -> None:
+        super().__init__()
+        self.l = 1
+        self.beg = True
+        self.feature1 = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(4, 4), padding=2),
+            nn.ReLU(inplace=True)
+        )
+        self.feature11 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
 
-    # x represents our data
-    def forward(self, x):
+        self.feature2 = nn.Sequential(
+            nn.Conv2d(64, 192, kernel_size=(3, 3), padding=2),
+            nn.ReLU(inplace=True))
+        self.feature22 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
 
-        act = F.relu
+        self.feature3 = nn.Sequential(
+            nn.Conv2d(192, 384, kernel_size=(3, 3), padding=1),
+            nn.ReLU(inplace=True)
+        )
 
-        x = self.input(x)
-        for i in range(self.hidden_count):
-            x = self.hidden[i](x)
+        self.feature4 = nn.Sequential(
+            nn.Conv2d(384, 256, kernel_size=(3, 3), padding=1),
+            nn.ReLU(inplace=True)
+        )
 
-        output = self.output(x)
-        return output
+        self.feature5 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=(3, 3), padding=1),
+            nn.ReLU(inplace=True)
+        )
+
+        self.feature55 = nn.Sequential(
+
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.AdaptiveAvgPool2d((6, 6))
+        )
+
+        self.classifier1 = nn.Sequential(
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True)
+        )
+
+        self.classifier2 = nn.Sequential(
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True)
+        )
+        self.classifier3 = nn.Sequential(
+            nn.Linear(4096, num_classes)
+        )
+        self.layers = [
+            self.feature1, self.feature11, self.feature2, self.feature22,
+            self.feature3, self.feature4, self.feature5, self.feature55,
+            self.classifier1, self.classifier2, self.classifier3
+
+        ]
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+        if self.beg:
+            start = 0
+            end = self.l
+        else:
+            start = self.l
+            end = len(self.layers)
+        return x
+
+    def set_const(self, l=1, beg=True):
+        self.l = l
+        self.beg = beg
 
 
 width = 1000
@@ -37,20 +90,17 @@ from codecarbon import OfflineEmissionsTracker
 
 from torchvision import models
 
-model = models.vgg16()
+model = AlexNet()
 torch.no_grad()
 
-for depth in range(0, 10):
+for depth in range(0, 11):
     print("==========DEPTH {} ==========".format(depth))
     tracker = OfflineEmissionsTracker(country_iso_code="ITA")
     random_data = torch.rand((1, 3, 255, 255))
-    now = time.time()
+    
     tracker.start()
     with torch.no_grad():
-        #for _ in range(10):
         result = model(random_data)
     data = tracker.get_data()
     emission = tracker.stop()
-    duration = time.time() - now
     print("====================>data {}".format(data))
-

@@ -19,7 +19,7 @@ from codecarbon.core.emissions import Emissions
 from codecarbon.core.units import Energy, Power, Time
 from codecarbon.core.util import count_cpus, suppress, is_jetson
 from codecarbon.external.geography import CloudMetadata, GeoMetadata
-from codecarbon.external.hardware import CPU, GPU, RAM, JRAM
+from codecarbon.external.hardware import CPU, GPU, RAM, JRAM, JCPU, TX2
 from codecarbon.external.logger import logger, set_logger_format, set_logger_level
 from codecarbon.external.scheduler import PeriodicScheduler
 from codecarbon.input import DataSource
@@ -239,6 +239,9 @@ class BaseEmissionsTracker(ABC):
         self._conf["cpu_count"] = count_cpus()
         self._geo = None
 
+
+
+
         if isinstance(self._gpu_ids, str):
             self._gpu_ids: List[int] = parse_gpu_ids(self._gpu_ids)
             self._conf["gpu_ids"] = self._gpu_ids
@@ -251,7 +254,12 @@ class BaseEmissionsTracker(ABC):
             logger.info("[setup] RAM Tracking...")
             ram = RAM(tracking_mode=self._tracking_mode)
             self._conf["ram_total_size"] = ram.machine_memory_GB
-        self._hardware: List[Union[JRAM, RAM, CPU, GPU]] = [ram]
+        self._hardware: List[Union[JRAM, RAM, CPU, GPU, JCPU, TX2]] = [ram]
+
+        if is_jetson():
+            logger.info("[setup] J-board Tracking...")
+            self._board = TX2()
+            self._hardware.append(self._board)
 
         # Hardware detection
         logger.info("[setup] GPU Tracking...")
@@ -268,7 +276,13 @@ class BaseEmissionsTracker(ABC):
             logger.info("No GPU found.")
 
         logger.info("[setup] CPU Tracking...")
-        if cpu.is_powergadget_available():
+
+        if is_jetson():
+            logger.info("Tracking JETSON CPU")
+            hardware = JCPU()
+            self._hardware.append(hardware)
+            self._conf["cpu_model"] = "JETSON CPU"
+        elif cpu.is_powergadget_available():
             logger.info("Tracking Intel CPU via Power Gadget")
             hardware = CPU.from_utils(self._output_dir, "intel_power_gadget")
             self._hardware.append(hardware)
@@ -527,7 +541,7 @@ class BaseEmissionsTracker(ABC):
                 + " (%ds), results might be inaccurate"
             )
             logger.warning(warn_msg, last_duration)
-
+        found = False
         for hardware in self._hardware:
             h_time = time.time()
             power, energy = hardware.measure_power_and_energy(
@@ -540,7 +554,11 @@ class BaseEmissionsTracker(ABC):
                 + " : "
                 + f"{self._total_energy.kWh:.6f} kWh"
             )
-            self._total_energy += energy
+            if not is_jetson():
+                self._total_energy += energy
+            else:
+                if isinstance(hardware, TX2):
+                    self._total_energy += energy
             if isinstance(hardware, CPU):
                 self._total_cpu_energy += energy
                 self._cpu_power = power
