@@ -559,9 +559,14 @@ class BaseEmissionsTracker(ABC):
             else:
                 if isinstance(hardware, TX2):
                     self._total_energy += energy
+
             if isinstance(hardware, CPU):
                 self._total_cpu_energy += energy
                 self._cpu_power = power
+            elif isinstance(hardware, JCPU):
+                self._total_cpu_energy += energy
+                self._cpu_power = power
+
             elif isinstance(hardware, GPU):
                 self._total_gpu_energy += energy
                 self._gpu_power = power
