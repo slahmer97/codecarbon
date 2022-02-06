@@ -1,12 +1,6 @@
-import time
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch._C import _log_api_usage_once
-from typing import Any
-
-from codecarbon import EmissionsTracker
+from codecarbon import OfflineEmissionsTracker
 
 
 class AlexNet(nn.Module):
@@ -62,33 +56,28 @@ class AlexNet(nn.Module):
         self.classifier3 = nn.Sequential(
             nn.Linear(4096, num_classes)
         )
-        self.layers = [
-            self.feature1, self.feature11, self.feature2, self.feature22,
-            self.feature3, self.feature4, self.feature5, self.feature55,
-            self.classifier1, self.classifier2, self.classifier3
 
+        self.layers = [
+            self.feature1,
+            self.feature11,
+            self.feature2,
+            self.feature22,
+            self.feature3,
+            self.feature4,
+            self.feature5,
+            self.feature55,
+            self.classifier1,
+            self.classifier2,
+            self.classifier3
         ]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-
-        if self.beg:
-            start = 0
-            end = self.l
-        else:
-            start = self.l
-            end = len(self.layers)
+        for i in range(len(self.layers)):
+            x = self.layers[i]
         return x
 
-    def set_const(self, l=1, beg=True):
-        self.l = l
-        self.beg = beg
 
 
-width = 1000
-length = 0
-from codecarbon import OfflineEmissionsTracker
-
-from torchvision import models
 
 model = AlexNet()
 torch.no_grad()
@@ -97,7 +86,7 @@ for depth in range(0, 11):
     print("==========DEPTH {} ==========".format(depth))
     tracker = OfflineEmissionsTracker(country_iso_code="ITA")
     random_data = torch.rand((1, 3, 255, 255))
-    
+
     tracker.start()
     with torch.no_grad():
         result = model(random_data)
