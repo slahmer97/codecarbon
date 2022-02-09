@@ -124,6 +124,8 @@ for depth in range(0, 2):
         (duration, board_power / float(count), cpu_power / float(count), ram_power / float(count)))
     reset()
     mutex.release()
+
 print("duration,board,cpu,ram")
 for i in range(len(array)):
     print("{},{},{},{}".format(array[i][0], array[i][1], array[i][2], array[i][3]))
+
