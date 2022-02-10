@@ -10,7 +10,7 @@ gpu2 = []
 duration = []
 
 X = []
-for i in range(1, 22):
+for i in range(0, 22):
     tmp = pd.read_csv("a{}.csv".format(i))
     tmpr = pd.read_csv("a{}r.csv".format(i))
     avg_total_duration = (tmp["duration"] + tmpr["duration"]).mean()

@@ -34,7 +34,7 @@ for i in range(1, 12):
     duration.append(avg_total_duration)
     X.append(i)
 
-all_ram = (alex["duration"] * (alex["ram"] - 400)).mean() + (alex["duration"] * (alex["gpu"] - 150)).mean() + (alex["duration"] * (alex["cpu"] - 450)).mean()
+all_ram = (alex["duration"] * (alex["gpu"] - 150)).mean()
 print(all_ram)
 from plotly import graph_objects as go
 data = {
