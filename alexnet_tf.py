@@ -5,6 +5,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Dropout
 import threading as th
 
+from keras_flops import get_flops
+
 mutex = th.Lock()
 count = 0
 ram_power = 0
@@ -66,7 +68,7 @@ def reset():
 
 
 class AlexNet(Sequential):
-    def __init__(self, input_shape=(3, 255, 255), num_classes=1000):
+    def __init__(self, input_shape=(3, 455, 455), num_classes=1000):
         super().__init__()
 
         self.add(Conv2D(96, kernel_size=(11, 11), strides=4,
@@ -128,6 +130,10 @@ class AlexNet(Sequential):
                        #, input_shape=input_shape
                        ))
 
+model = AlexNet((455, 455, 3), 10000)
+print(isinstance(model, tf.keras.Sequential))
+flops = get_flops(model)
+print(f"FLOPS: {flops / 10 ** 9:.03} G")
 
 model = AlexNet((112, 112, 96), 1000)
 print(model.summary())

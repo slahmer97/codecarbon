@@ -5,6 +5,8 @@ from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 import os
 
+from keras_flops import get_flops
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.get_logger().setLevel('ERROR')
 
@@ -64,91 +66,94 @@ def reset():
     count = ram_power = cpu_power = board_power = gpu_power = 0
 
 
-
 class VGG(Sequential):
     def __init__(self, input_shape=(3, 255, 255), num_classes=1000):
         super().__init__()
 
         self.add(
-            Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')
+            Conv2D(64, (3, 3), activation='relu', padding='same', name='1', input_shape=input_shape)
         )
 
         self.add(
-            Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2')
+            Conv2D(64, (3, 3), activation='relu', padding='same', name='2')
         )
 
         self.add(
-            MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')
+            MaxPooling2D((2, 2), strides=(2, 2), name='3')
         )
 
         self.add(
-            Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv1')
+            Conv2D(128, (3, 3), activation='relu', padding='same', name='4')
         )
         self.add(
-            Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv2')
+            Conv2D(128, (3, 3), activation='relu', padding='same', name='5')
         )
         self.add(
-            MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')
+            MaxPooling2D((2, 2), strides=(2, 2), name='6')
         )
         self.add(
-            Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv1')
+            Conv2D(256, (3, 3), activation='relu', padding='same', name='7')
         )
         self.add(
-            Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv2')
+            Conv2D(256, (3, 3), activation='relu', padding='same', name='8')
         )
         self.add(
-            Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv3')
-        )
-
-        self.add(
-            MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')
+            Conv2D(256, (3, 3), activation='relu', padding='same', name='9')
         )
 
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv1')
+            MaxPooling2D((2, 2), strides=(2, 2), name='10')
+        )
+
+        self.add(
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='11')
         )
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv2')
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='12')
         )
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv3')
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='13')
         )
         self.add(
-            MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool')
+            MaxPooling2D((2, 2), strides=(2, 2), name='14')
         )
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv1')
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='15')
         )
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv2')
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='16')
         )
         self.add(
-            Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3')
+            Conv2D(512, (3, 3), activation='relu', padding='same', name='17')
         )
         self.add(
-            MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')
+            MaxPooling2D((2, 2), strides=(2, 2), name='18')
         )
         self.add(
-            Flatten(name='flatten')
+            Flatten(name='19')
         )
         self.add(
-            Dense(4096, activation='relu', name='fc1')
+            Dense(4096, activation='relu', name='20')
         )
         self.add(
-            Dense(4096, activation='relu', name='fc2')
+            Dense(4096, activation='relu', name='21')
         )
         self.add(
-            Dense(num_classes, activation='softmax', name='predictions')
+            Dense(num_classes, activation='softmax', name='22')
         )
 
 
 model = VGG((455, 455, 3), 10000)
-a = tf.random.normal([1, 455, 455, 3], 0, 255, tf.float32, seed=1)
-result = model.predict(a, steps=1)
+print(isinstance(model, tf.keras.Sequential))
+flops = get_flops(model)
+print(f"FLOPS: {flops / 10 ** 9:.03} G")
+#
+# result = model.predict(a, steps=1)
+# print(result.shape)
 
-print(result.shape)
 print(model.summary())
 exit(0)
+
 reset()
 rt = PowerSampler(0.02, sampler, "World")
 array = []
